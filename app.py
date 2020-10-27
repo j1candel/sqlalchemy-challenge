@@ -160,7 +160,10 @@ def start(start):
 
     start_date = dt.datetime.strptime(start, '%Y-%m-%d')
 
-    results = session.query(func.min(measurement.tobs),func.max(measurement.tobs),func.avg(measurement.tobs)).filter(measurement.date >= start_date).all()
+    results = session.query(func.min(measurement.tobs),\
+    func.max(measurement.tobs),\
+    func.avg(measurement.tobs)).\
+    filter(measurement.date >= start_date).all()
 
     session.close()
 
@@ -180,6 +183,40 @@ def start(start):
     return jsonify(desc_temp)
 
 #####################################################################################
+
+@app.route("/api/v1.0/<start>/<end>")
+def start_end(start, end):
+
+    session = Session(engine)
+
+    start_date = dt.datetime.strptime(start, '%Y-%m-%d')
+    
+    end_date = dt.datetime.strptime(end, '%Y-%m-%d')
+
+    results = session.query(func.min(measurement.tobs),\
+    func.max(measurement.tobs),\
+    func.avg(measurement.tobs)).\
+    filter(measurement.date >= start_date).\
+    filter(measurement.date <= end_date).all()
+
+    session.close()
+
+    desc_temp = []
+
+    for result in results:
+        
+        r = {}
+
+        r['Start_Date'] = start_date
+        r['End_Date'] = end_date
+        r['Min_Temp'] = result[0]
+        r['Max_Temp'] = result[1]
+        r['Avg_Temp'] = result[2]
+
+        desc_temp.append(r)
+
+    return jsonify(desc_temp)
+
 
 #run the app
 if __name__ == "__main__":
