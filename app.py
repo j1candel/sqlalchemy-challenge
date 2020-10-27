@@ -6,6 +6,11 @@ from sqlalchemy import create_engine, func, inspect
 
 from flask import Flask, jsonify
 
+import numpy as np
+import datetime as dt
+
+#####################################################################################
+
 engine = create_engine("sqlite:///Resources/hawaii.sqlite")
 conn = engine.connect()
 
@@ -21,23 +26,57 @@ measurement = Base.classes.measurement
 #Save station reference to reference table 
 station = Base.classes.station
 
+#####################################################################################
+
+session = Session(engine)
+
+#Finding the last date in the dataset 
+last_date = session.query(measurement.date).order_by(measurement.date.desc()).first()
+
+one_year_from_last_date = dt.date(2017,8,23)-dt.timedelta(days=365)
+
+session.close()
+
+#####################################################################################
+
+session = Session(engine)
+
+descending_order = session.query(measurement.station, func.count(measurement.prcp)).\
+    group_by(measurement.station).\
+    order_by(func.count(measurement.prcp).desc()).all()
+
+most_active = descending_order[0][0]
+
+session.close()
+
+#####################################################################################
+
+most_active
 #Creating the app
 app = Flask(__name__)
 
 #Defining the flask route
-@app.route("/")
+@app.route('/')
 def home():
     #List of all available api routes
     return(
         f'Hello! Take a Look at Hawaii Weather<br/>'
         f'The following are the available routes:<br/>'
         f'<br/>'
-        f'Precipitation With Dates:<br/>'
-        f'/api/v1.0/precipitation'
+        f'Precipitation with Dates:<br/>'
+        f'/api/v1.0/precipitation<br/>'
+        f'<br/>'
+        f'Stations with Names:<br/>'
+        f'/api/v1.0/stations<br/>'
+        f'<br/>'
+        f'Most Active Station: Dates and Temperature:<br/>'
+        f'/api/v1.0/tobs<br/>'
     ) 
 
+#####################################################################################
+
 #Defining the precipitation route
-@app.route("/api/v1.0/precipitation")
+@app.route('/api/v1.0/precipitation')
 def precipitation():
 
     session = Session(engine)
@@ -51,13 +90,16 @@ def precipitation():
     for result in results:
         r = {}
 
-        r[result[0]] = result[1]
+        r['Date'] = result[0]
+        r['Precipitation'] = result[1]
 
         precipitation.append(r)
 
     return jsonify(precipitation)
 
-@app.route("/api/v1.0/stations")
+#####################################################################################
+
+@app.route('/api/v1.0/stations')
 def stations():
 
     session = Session(engine)
@@ -71,12 +113,37 @@ def stations():
     for result in results:
         r = {}
 
-        r['station'] = result[0]
-        r['name'] = result[1]
+        r['Station'] = result[0]
+        r['Name'] = result[1]
 
         stations.append(r)
     
     return jsonify(stations)
+
+#####################################################################################
+
+@app.route('/api/v1.0/tobs')
+def tobs():
+    
+    session = Session(engine)
+
+    results = session.query(measurement.date, measurement.tobs).\
+        filter(measurement.date >= one_year_from_last_date).\
+        filter(measurement.station == most_active).all()
+    
+    session.close()
+
+    temperature = []
+
+    for result in results:
+        r = {}
+
+        r['Date'] = result[0]
+        r['Name'] = result[1]
+
+        temperature.append(r)
+
+    return jsonify(temperature)
 
 #run the app
 if __name__ == "__main__":
