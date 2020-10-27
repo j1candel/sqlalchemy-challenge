@@ -71,6 +71,12 @@ def home():
         f'<br/>'
         f'Most Active Station: Dates and Temperature:<br/>'
         f'/api/v1.0/tobs<br/>'
+        f'<br/>'
+        f'Min, Max, & Avg Temp for any Start Date. Enter Date as YYYY-MM-DD. <br/>'
+        f'/api/v1.0/<start><br/>'
+        f'<br/>'
+        f'Min, Max, & Avg Temp between Date Range<br/>'
+        f'/api/v1.0/<start>/<end><br/>'
     ) 
 
 #####################################################################################
@@ -139,11 +145,41 @@ def tobs():
         r = {}
 
         r['Date'] = result[0]
-        r['Name'] = result[1]
+        r['Temperature'] = result[1]
 
         temperature.append(r)
 
     return jsonify(temperature)
+
+#####################################################################################
+
+@app.route("/api/v1.0/<start>")
+def start(start):
+
+    session = Session(engine)
+
+    start_date = dt.datetime.strptime(start, '%Y-%m-%d')
+
+    results = session.query(func.min(measurement.tobs),func.max(measurement.tobs),func.avg(measurement.tobs)).filter(measurement.date >= start_date).all()
+
+    session.close()
+
+    desc_temp = []
+
+    for result in results:
+        
+        r = {}
+
+        r['Start_Date'] = start_date
+        r['Min_Temp'] = result[0]
+        r['Max_Temp'] = result[1]
+        r['Avg_Temp'] = result[2]
+
+        desc_temp.append(r)
+
+    return jsonify(desc_temp)
+
+#####################################################################################
 
 #run the app
 if __name__ == "__main__":
