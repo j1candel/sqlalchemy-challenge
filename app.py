@@ -117,6 +117,7 @@ def precipitation():
 
 #####################################################################################
 
+#Defining the stations route
 @app.route('/api/v1.0/stations')
 def stations():
 
@@ -147,6 +148,7 @@ def stations():
 
 #####################################################################################
 
+#Defining the temperature route
 @app.route('/api/v1.0/tobs')
 def tobs():
     
@@ -175,18 +177,23 @@ def tobs():
         #Appending into temperature list
         temperature.append(r)
 
+    #Displaying stations on app
     return jsonify(temperature)
 
 #####################################################################################
 
+#Defining the start date route
 @app.route("/api/v1.0/<start>")
 def start(start):
 
     # Beginning session
     session = Session(engine)
 
+    # Setting the format of the date 
     start_date = dt.datetime.strptime(start, '%Y-%m-%d')
 
+    # The min, max, and average temperature of the the dates equal to and greater than 
+    # the start date
     results = session.query(func.min(measurement.tobs),\
     func.max(measurement.tobs),\
     func.avg(measurement.tobs)).\
@@ -195,10 +202,11 @@ def start(start):
     # Closing session
     session.close()
 
+    #Setting temperature equal to a list
     desc_temp = []
 
+    #Putting results into a dictionary
     for result in results:
-        
         r = {}
 
         r['Start_Date'] = start_date
@@ -206,22 +214,27 @@ def start(start):
         r['Max_Temp'] = result[1]
         r['Avg_Temp'] = result[2]
 
+        #Appending into descibe temperature list
         desc_temp.append(r)
-
+    
+    #Displaying stations on app
     return jsonify(desc_temp)
 
 #####################################################################################
 
+#Defining the start and end date route
 @app.route("/api/v1.0/<start>/<end>")
 def start_end(start, end):
 
     # Beginning session
     session = Session(engine)
 
+    # Setting the format of the date 
     start_date = dt.datetime.strptime(start, '%Y-%m-%d')
-    
     end_date = dt.datetime.strptime(end, '%Y-%m-%d')
 
+    # The min, max, and average temperature of the the dates equal to and greater than 
+    # the start date but less than or equal to the end date 
     results = session.query(func.min(measurement.tobs),\
     func.max(measurement.tobs),\
     func.avg(measurement.tobs)).\
@@ -230,9 +243,11 @@ def start_end(start, end):
 
     # Closing session
     session.close()
-
+    
+    #Setting temperature equal to a list
     desc_temp = []
 
+    #Putting results into a dictionary
     for result in results:
         
         r = {}
@@ -242,9 +257,11 @@ def start_end(start, end):
         r['Min_Temp'] = result[0]
         r['Max_Temp'] = result[1]
         r['Avg_Temp'] = result[2]
-
+        
+        #Appending into descibe temperature list
         desc_temp.append(r)
-
+    
+     #Displaying stations on app
     return jsonify(desc_temp)
 
 #run the app
