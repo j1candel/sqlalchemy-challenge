@@ -80,7 +80,7 @@ def home():
         f'Min, Max, & Avg Temp for any Start Date. Enter Date as YYYY-MM-DD. <br/>'
         f'/api/v1.0/<start><br/>'
         f'<br/>'
-        f'Min, Max, & Avg Temp between Date Range. Enter Date as <br/>'
+        f'Min, Max, & Avg Temp between Date Range. Enter Date as YYYY-<br/>'
         f'/api/v1.0/<start>/<end><br/>'
     ) 
 
